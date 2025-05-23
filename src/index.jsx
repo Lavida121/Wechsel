@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './style.css';
 
@@ -7,23 +6,24 @@ const App = () => {
   const [amount, setAmount] = useState('');
   const [result, setResult] = useState(null);
   const [currency, setCurrency] = useState('EUR');
+  const [rates, setRates] = useState({});
 
-  const exchangeRates = {
-    EUR: 43.37880,
-    USD: 38.37130,
-    XAU: 4091.07
-  };
+  useEffect(() => {
+    fetch('https://api.exchangerate.host/latest?base=TRY&symbols=EUR,USD,XAU')
+      .then(res => res.json())
+      .then(data => setRates(data.rates));
+  }, []);
 
   const calculate = () => {
     const value = parseFloat(amount);
-    if (!value) return;
-    const converted = value / exchangeRates[currency];
+    if (!value || !rates[currency]) return;
+    const converted = value * rates[currency];
     setResult(converted.toFixed(2));
   };
 
   return (
     <div className="app">
-      <h1>TL zu {currency} Umrechner</h1>
+      <h1>TL → {currency} Währungsrechner</h1>
       <input
         type="number"
         placeholder="Betrag in TL"
@@ -31,9 +31,9 @@ const App = () => {
         onChange={(e) => setAmount(e.target.value)}
       />
       <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-        <option value="EUR">EUR</option>
-        <option value="USD">USD</option>
-        <option value="XAU">XAU (Gold)</option>
+        <option value="EUR">Euro (EUR)</option>
+        <option value="USD">US-Dollar (USD)</option>
+        <option value="XAU">Gold (XAU)</option>
       </select>
       <button onClick={calculate}>Berechne</button>
       {result && <p>Ergebnis: {result} {currency}</p>}
